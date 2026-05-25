@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kurban Kesim ve Hisse Takip Sistemi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="min-h-screen flex">
+    <aside class="w-64 bg-white border-r border-slate-200 p-4">
+      <div class="text-xl font-bold mb-6">Kurban Takip</div>
+      <nav class="space-y-2">
+        <button class="nav-btn w-full text-left px-3 py-2 rounded hover:bg-slate-100" data-target="dashboard">Dashboard</button>
+        <button class="nav-btn w-full text-left px-3 py-2 rounded hover:bg-slate-100" data-target="kisiler">Kişiler</button>
+        <button class="nav-btn w-full text-left px-3 py-2 rounded hover:bg-slate-100" data-target="hayvanlar">Hayvanlar</button>
+        <button class="nav-btn w-full text-left px-3 py-2 rounded hover:bg-slate-100" data-target="kesim">Kesim Paneli</button>
+      </nav>
+      <div class="mt-8 text-xs text-slate-500">Created by Sefa AVCI</div>
+    </aside>
+
+    <main class="flex-1 p-6">
+      <section id="section-dashboard" class="space-y-6">
+        <h1 class="text-2xl font-bold">Dashboard</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-white border border-slate-200 rounded-lg p-4">
+            <div class="text-sm text-slate-500">Toplam Hayvan</div>
+            <div id="dash-toplam" class="text-3xl font-bold">-</div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-lg p-4">
+            <div class="text-sm text-slate-500">Kesilen</div>
+            <div id="dash-kesilen" class="text-3xl font-bold">-</div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-lg p-4">
+            <div class="text-sm text-slate-500">Kalan</div>
+            <div id="dash-kalan" class="text-3xl font-bold">-</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <button id="btn-dash-toplam-hissedar" class="bg-white border border-slate-200 rounded-lg p-4 text-left hover:bg-slate-50">
+            <div class="text-sm text-slate-500">Toplam Hissedar</div>
+            <div id="dash-toplam-hissedar" class="text-2xl font-bold">-</div>
+          </button>
+          <button id="btn-dash-kesilen-hissedar" class="bg-white border border-slate-200 rounded-lg p-4 text-left hover:bg-slate-50">
+            <div class="text-sm text-slate-500">Kurbanı Kesilen Hissedar</div>
+            <div id="dash-kesilen-hissedar" class="text-2xl font-bold">-</div>
+          </button>
+          <button id="btn-dash-odeme-tamam" class="bg-white border border-slate-200 rounded-lg p-4 text-left hover:bg-slate-50">
+            <div class="text-sm text-slate-500">Ödemesi Tamamlanan</div>
+            <div id="dash-odeme-tamam" class="text-2xl font-bold">-</div>
+          </button>
+          <button id="btn-dash-borclu" class="bg-white border border-slate-200 rounded-lg p-4 text-left hover:bg-slate-50">
+            <div class="text-sm text-slate-500">Borçlu Hissedar</div>
+            <div id="dash-borclu" class="text-2xl font-bold">-</div>
+          </button>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-lg p-4">
+          <div id="dash-kisi-list-title" class="font-semibold">Kişiler</div>
+          <div class="mt-3 overflow-auto">
+            <table class="min-w-full text-sm">
+              <thead class="bg-slate-100 text-slate-600">
+                <tr>
+                  <th class="text-left px-3 py-2">Ad Soyad</th>
+                  <th class="text-left px-3 py-2">Telefon</th>
+                  <th class="text-left px-3 py-2">Kategori</th>
+                  <th class="text-right px-3 py-2">Toplam Ödenen</th>
+                  <th class="text-right px-3 py-2">Kalan Borç</th>
+                </tr>
+              </thead>
+              <tbody id="dash-kisi-list" class="divide-y divide-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="section-kisiler" class="hidden space-y-6">
+        <div class="flex items-center justify-between">
+          <h1 class="text-2xl font-bold">Kişiler</h1>
+          <button id="btn-kisi-modal" class="px-4 py-2 rounded bg-slate-900 text-white hover:bg-slate-800">Yeni Kişi</button>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-lg p-4">
+          <label class="text-sm text-slate-600">Ara (Ad Soyad / Telefon)</label>
+          <input id="kisiler-ara" placeholder="İsim veya telefon yaz..." class="mt-1 w-full border rounded px-3 py-2" />
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <table class="min-w-full text-sm">
+            <thead class="bg-slate-100 text-slate-600">
+              <tr>
+                <th class="text-left px-4 py-3">Ad Soyad</th>
+                <th class="text-left px-4 py-3">Telefon</th>
+                <th class="text-left px-4 py-3">Kategori</th>
+                <th class="text-right px-4 py-3">Kategori Fiyat</th>
+                <th class="text-right px-4 py-3">Peşinat</th>
+                <th class="text-right px-4 py-3">Toplam Ödenen</th>
+                <th class="text-right px-4 py-3">Borç</th>
+                <th class="text-left px-4 py-3">Vekalet</th>
+                <th class="text-right px-4 py-3">İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="kisiler-tbody" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="section-hayvanlar" class="hidden space-y-6">
+        <div class="flex items-center justify-between">
+          <h1 class="text-2xl font-bold">Hayvanlar</h1>
+          <button id="btn-hayvan-modal" class="px-4 py-2 rounded bg-slate-900 text-white hover:bg-slate-800">Yeni Hayvan</button>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <table class="min-w-full text-sm">
+            <thead class="bg-slate-100 text-slate-600">
+              <tr>
+                <th class="text-left px-4 py-3">Sıra</th>
+                <th class="text-right px-4 py-3">Taşı</th>
+                <th class="text-left px-4 py-3">Küpe No</th>
+                <th class="text-left px-4 py-3">Grup</th>
+                <th class="text-right px-4 py-3">Kilo</th>
+                <th class="text-right px-4 py-3">Kişi Başı Et</th>
+                <th class="text-right px-4 py-3">Toplam Fiyat</th>
+                <th class="text-right px-4 py-3">Hisse</th>
+                <th class="text-right px-4 py-3">Dolu/Boş</th>
+                <th class="text-right px-4 py-3">Hissedar</th>
+              </tr>
+            </thead>
+            <tbody id="hayvanlar-tbody" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="section-kesim" class="hidden space-y-6">
+        <h1 class="text-2xl font-bold">Kesim Paneli</h1>
+
+        <div id="kesim-kutu" class="border rounded-lg p-6 bg-white border-slate-200">
+          <div class="text-4xl font-extrabold tracking-wide">SIRADAKİ HAYVAN</div>
+          <div id="kesim-kupe" class="text-5xl font-black mt-2">-</div>
+          <div id="kesim-grup" class="text-lg mt-2 text-slate-700">-</div>
+
+          <div class="mt-6">
+            <div class="text-sm text-slate-500 mb-2">Hissedarlar</div>
+            <div id="kesim-hissedarlar" class="space-y-2"></div>
+          </div>
+
+          <div id="kesim-uyari" class="mt-6 text-lg font-semibold"></div>
+
+          <button id="btn-kesimi-onayla" class="mt-6 px-6 py-3 rounded bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            KESİMİ ONAYLA
+          </button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Kisi Modal -->
+  <div id="modal-kisi" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg w-full max-w-xl p-5">
+      <div class="flex items-center justify-between">
+        <div id="kisi-modal-title" class="text-lg font-bold">Yeni Kişi</div>
+        <button class="modal-close px-2 py-1">Kapat</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div>
+          <label class="text-sm text-slate-600">Ad Soyad</label>
+          <input id="kisi-ad" class="mt-1 w-full border rounded px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm text-slate-600">Telefon</label>
+          <input id="kisi-telefon" class="mt-1 w-full border rounded px-3 py-2" />
+        </div>
+
+        <!-- Kategori Seçimi -->
+        <div>
+          <label class="text-sm text-slate-600">Hayvan Cinsiyet</label>
+          <select id="kisi-kategori-cinsiyet" class="mt-1 w-full border rounded px-3 py-2">
+            <option value="">Seçiniz</option>
+            <option value="erkek">Erkek</option>
+            <option value="disi">Dişi</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-slate-600">Kilo Kategorisi</label>
+          <select id="kisi-kategori-kg" class="mt-1 w-full border rounded px-3 py-2">
+            <option value="">Önce cinsiyet seçin</option>
+          </select>
+        </div>
+
+        <!-- Kategori Fiyat Bilgisi -->
+        <div id="kisi-kategori-fiyat-box" class="md:col-span-2 hidden">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between">
+            <div>
+              <span class="text-sm text-blue-700 font-medium">Seçilen Kategori:</span>
+              <span id="kisi-kategori-ozet" class="text-sm font-bold text-blue-900 ml-1"></span>
+            </div>
+            <div>
+              <span class="text-sm text-blue-700 font-medium">Fiyat:</span>
+              <span id="kisi-kategori-fiyat-goster" class="text-lg font-bold text-blue-900 ml-1"></span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-sm text-slate-600">Peşinat</label>
+          <input id="kisi-pesinat" type="number" step="0.01" class="mt-1 w-full border rounded px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm text-slate-600">Toplam Ödenen</label>
+          <input id="kisi-toplam" type="number" step="0.01" class="mt-1 w-full border rounded px-3 py-2" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="text-sm text-slate-600">Vekalet Durumu</label>
+          <select id="kisi-vekalet" class="mt-1 w-full border rounded px-3 py-2">
+            <option value="0">Alınmadı</option>
+            <option value="1">Alındı</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mt-5 flex justify-end gap-2">
+        <button id="btn-kisi-sil" class="hidden px-4 py-2 rounded bg-rose-600 text-white hover:bg-rose-700">Sil</button>
+        <button id="btn-kisi-kaydet" class="px-4 py-2 rounded bg-slate-900 text-white hover:bg-slate-800">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hayvan Modal -->
+  <div id="modal-hayvan" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg w-full max-w-xl p-5">
+      <div class="flex items-center justify-between">
+        <div id="hayvan-modal-title" class="text-lg font-bold">Yeni Hayvan</div>
+        <button class="modal-close px-2 py-1">Kapat</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div>
+          <label class="text-sm text-slate-600">Küpe No</label>
+          <input id="hayvan-kupe" class="mt-1 w-full border rounded px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm text-slate-600">Grup</label>
+          <select id="hayvan-grup" class="mt-1 w-full border rounded px-3 py-2">
+            <option value="Küçükbaş">Küçükbaş</option>
+            <option value="Orta">Orta</option>
+            <option value="Büyükbaş">Büyükbaş</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-slate-600">Toplam Fiyat</label>
+          <input id="hayvan-fiyat" type="number" step="0.01" class="mt-1 w-full border rounded px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm text-slate-600">Kilo (kg)</label>
+          <input id="hayvan-kilo" type="number" step="0.01" class="mt-1 w-full border rounded px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm text-slate-600">Hisse Adedi</label>
+          <input id="hayvan-hisse" type="number" class="mt-1 w-full border rounded px-3 py-2" value="7" />
+        </div>
+      </div>
+
+      <div class="mt-5 flex justify-end gap-2">
+        <button id="btn-hayvan-kaydet" class="px-4 py-2 rounded bg-slate-900 text-white hover:bg-slate-800">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hissedar Modal -->
+  <div id="modal-hissedar" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg w-full max-w-3xl p-5">
+      <div class="flex items-center justify-between">
+        <div id="hissedar-title" class="text-lg font-bold">Hissedarlar</div>
+        <button class="modal-close px-2 py-1">Kapat</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div>
+          <div class="text-sm text-slate-500 mb-2">Mevcut Hissedarlar</div>
+          <div id="hissedar-list" class="space-y-2"></div>
+        </div>
+
+        <div>
+          <div class="text-sm text-slate-500 mb-2">Hissedar Ekle</div>
+          <input id="hissedar-ara" placeholder="İsimle ara..." class="w-full border rounded px-3 py-2" />
+          <div id="hissedar-ara-sonuc" class="mt-3 space-y-2 max-h-72 overflow-auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
