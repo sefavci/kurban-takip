@@ -96,8 +96,8 @@
                 <th class="text-left px-4 py-3">Kategori</th>
                 <th class="text-right px-4 py-3">Kategori Fiyat</th>
                 <th class="text-right px-4 py-3">Peşinat</th>
-                <th class="text-right px-4 py-3">Toplam Ödenen</th>
-                <th class="text-right px-4 py-3">Borç</th>
+                <th class="text-right px-4 py-3">Ödenen</th>
+                <th class="text-right px-4 py-3">Kalan Borç</th>
                 <th class="text-left px-4 py-3">Vekalet</th>
                 <th class="text-right px-4 py-3">İşlem</th>
               </tr>
@@ -206,10 +206,7 @@
           <label class="text-sm text-slate-600">Peşinat</label>
           <input id="kisi-pesinat" type="number" step="0.01" class="mt-1 w-full border rounded px-3 py-2" />
         </div>
-        <div>
-          <label class="text-sm text-slate-600">Toplam Ödenen</label>
-          <input id="kisi-toplam" type="number" step="0.01" class="mt-1 w-full border rounded px-3 py-2" />
-        </div>
+
         <div class="md:col-span-2">
           <label class="text-sm text-slate-600">Vekalet Durumu</label>
           <select id="kisi-vekalet" class="mt-1 w-full border rounded px-3 py-2">
@@ -278,6 +275,44 @@
           <div class="text-sm text-slate-500 mb-2">Hissedar Ekle</div>
           <input id="hissedar-ara" placeholder="İsimle ara..." class="w-full border rounded px-3 py-2" />
           <div id="hissedar-ara-sonuc" class="mt-3 space-y-2 max-h-72 overflow-auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Odeme Modal -->
+  <div id="modal-odeme" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg w-full max-w-lg p-5">
+      <div class="flex items-center justify-between">
+        <div id="odeme-modal-title" class="text-lg font-bold">Ödemeler</div>
+        <button class="modal-close-odeme px-2 py-1">Kapat</button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <div id="odeme-ozet" class="bg-slate-50 border rounded-lg p-3 text-sm space-y-1"></div>
+
+        <div class="border-t pt-3">
+          <div class="text-sm font-semibold mb-2">Yeni Ödeme Ekle</div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div>
+              <label class="text-xs text-slate-500">Tutar</label>
+              <input id="odeme-tutar" type="number" step="0.01" class="mt-1 w-full border rounded px-3 py-2" placeholder="0.00" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-500">Tarih</label>
+              <input id="odeme-tarih" type="date" class="mt-1 w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-500">Açıklama</label>
+              <input id="odeme-aciklama" class="mt-1 w-full border rounded px-3 py-2" placeholder="Opsiyonel" />
+            </div>
+          </div>
+          <button id="btn-odeme-ekle" class="mt-2 px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700 w-full">Ödeme Ekle</button>
+        </div>
+
+        <div class="border-t pt-3">
+          <div class="text-sm font-semibold mb-2">Ödeme Geçmişi</div>
+          <div id="odeme-list" class="space-y-2 max-h-60 overflow-auto"></div>
         </div>
       </div>
     </div>

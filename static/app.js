@@ -107,6 +107,7 @@ function bindModals() {
       closeModal('#modal-kisi');
       closeModal('#modal-hayvan');
       closeModal('#modal-hissedar');
+      closeModal('#modal-odeme');
     });
   });
 
@@ -120,7 +121,6 @@ function bindModals() {
     updateKategoriKgOptions('');
     qs('#kisi-kategori-fiyat-box').classList.add('hidden');
     qs('#kisi-pesinat').value = 0;
-    qs('#kisi-toplam').value = 0;
     qs('#kisi-vekalet').value = '0';
     openModal('#modal-kisi');
   });
@@ -147,6 +147,9 @@ function bindModals() {
   qs('#btn-kisi-kaydet').addEventListener('click', saveKisi);
   qs('#btn-kisi-sil').addEventListener('click', deleteKisi);
   qs('#btn-hayvan-kaydet').addEventListener('click', saveHayvan);
+
+  qs('.modal-close-odeme').addEventListener('click', () => closeModal('#modal-odeme'));
+  qs('#btn-odeme-ekle').addEventListener('click', addOdeme);
 
   qs('#hissedar-ara').addEventListener('input', () => {
     renderKisiSearch(qs('#hissedar-ara').value);
@@ -257,15 +260,13 @@ async function loadKisiler() {
       ? '<span class="inline-flex px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700">Alındı</span>'
       : '<span class="inline-flex px-2 py-1 text-xs rounded bg-rose-100 text-rose-700">Alınmadı</span>';
 
-    const toplamOdenenGenel = Number(k.pesinat || 0) + Number(k.toplam_odenen || 0);
-
-    const hisseSayisi = Number(k.hisse_sayisi || 0);
-    const borcText = hisseSayisi > 0
+    const toplamOdenenGenel = Number(k.toplam_odenen_genel || 0);
+    const katFiyat = Number(k.kategori_fiyat || 0);
+    const borcText = katFiyat > 0
       ? money(k.kalan_borc)
-      : '<span class="text-slate-500">Henüz hisse belirlemedi</span>';
+      : '<span class="text-slate-500">Kategori seçilmedi</span>';
 
     const katText = kategoriLabel(k.kategori_cinsiyet, k.kategori_kg);
-    const katFiyat = Number(k.kategori_fiyat || 0);
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -277,12 +278,14 @@ async function loadKisiler() {
       <td class="px-4 py-3 text-right">${money(toplamOdenenGenel)}</td>
       <td class="px-4 py-3 text-right">${borcText}</td>
       <td class="px-4 py-3">${badge}</td>
-      <td class="px-4 py-3 text-right">
+      <td class="px-4 py-3 text-right space-x-1">
         <button class="px-3 py-1 rounded border hover:bg-slate-50" data-edit="${k.kisi_id}">Düzenle</button>
+        <button class="px-3 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700" data-odeme="${k.kisi_id}">Ödeme</button>
       </td>
     `;
 
     tr.querySelector('[data-edit]').addEventListener('click', () => openEditKisi(k));
+    tr.querySelector('[data-odeme]').addEventListener('click', () => openOdemeModal(k));
     tbody.appendChild(tr);
   });
 }
@@ -294,7 +297,6 @@ function openEditKisi(k) {
   qs('#kisi-ad').value = k.ad_soyad || '';
   qs('#kisi-telefon').value = k.telefon || '';
   qs('#kisi-pesinat').value = Number(k.pesinat || 0);
-  qs('#kisi-toplam').value = Number(k.toplam_odenen || 0);
   qs('#kisi-vekalet').value = String(Number(k.vekalet_durumu || 0));
 
   const cinsiyet = k.kategori_cinsiyet || '';
@@ -314,7 +316,7 @@ async function saveKisi() {
     ad_soyad: qs('#kisi-ad').value,
     telefon: qs('#kisi-telefon').value,
     pesinat: Number(qs('#kisi-pesinat').value || 0),
-    toplam_odenen: Number(qs('#kisi-toplam').value || 0),
+    toplam_odenen: 0,
     vekalet_durumu: Number(qs('#kisi-vekalet').value || 0),
     kategori_cinsiyet: qs('#kisi-kategori-cinsiyet').value || null,
     kategori_kg: qs('#kisi-kategori-kg').value ? Number(qs('#kisi-kategori-kg').value) : null,
@@ -615,6 +617,97 @@ async function loadKesimPaneli() {
     uyari.textContent = 'Tüm vekaletler tamam. Kesim onaylanabilir.';
     btn.disabled = false;
   }
+}
+
+// ------------------------
+// Odemeler
+// ------------------------
+let activeOdemeKisiId = null;
+let activeOdemeKisi = null;
+
+async function openOdemeModal(kisi) {
+  activeOdemeKisiId = kisi.kisi_id;
+  activeOdemeKisi = kisi;
+  qs('#odeme-modal-title').textContent = `Ödemeler - ${kisi.ad_soyad}`;
+  qs('#odeme-tutar').value = '';
+  qs('#odeme-tarih').value = new Date().toISOString().split('T')[0];
+  qs('#odeme-aciklama').value = '';
+  await loadOdemeler();
+  openModal('#modal-odeme');
+}
+
+async function loadOdemeler() {
+  if (!activeOdemeKisiId) return;
+
+  const odemeler = await fetchJSON(`/api/kisiler/${activeOdemeKisiId}/odemeler`);
+  const kisi = activeOdemeKisi;
+
+  const pesinat = Number(kisi.pesinat || 0);
+  const kategori_fiyat = Number(kisi.kategori_fiyat || 0);
+  const odemelerToplam = odemeler.reduce((sum, o) => sum + Number(o.tutar || 0), 0);
+  const toplamOdenen = pesinat + odemelerToplam;
+  const kalanBorc = kategori_fiyat > 0 ? kategori_fiyat - toplamOdenen : 0;
+
+  const ozet = qs('#odeme-ozet');
+  ozet.innerHTML = `
+    <div class="flex justify-between"><span class="text-slate-600">Kategori Fiyat:</span><span class="font-semibold">${kategori_fiyat > 0 ? money(kategori_fiyat) : '-'}</span></div>
+    <div class="flex justify-between"><span class="text-slate-600">Peşinat:</span><span class="font-semibold">${money(pesinat)}</span></div>
+    <div class="flex justify-between"><span class="text-slate-600">Ödemeler Toplamı:</span><span class="font-semibold">${money(odemelerToplam)}</span></div>
+    <div class="flex justify-between border-t pt-1"><span class="text-slate-600 font-semibold">Toplam Ödenen:</span><span class="font-bold text-emerald-700">${money(toplamOdenen)}</span></div>
+    <div class="flex justify-between"><span class="text-slate-600 font-semibold">Kalan Borç:</span><span class="font-bold ${kalanBorc > 0 ? 'text-rose-600' : 'text-emerald-700'}">${kategori_fiyat > 0 ? money(kalanBorc) : '-'}</span></div>
+  `;
+
+  const list = qs('#odeme-list');
+  if (odemeler.length === 0) {
+    list.innerHTML = '<div class="text-sm text-slate-500">Henüz ödeme yapılmamış</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  odemeler.forEach(o => {
+    const el = document.createElement('div');
+    el.className = 'border rounded p-2 flex items-center justify-between';
+    el.innerHTML = `
+      <div>
+        <span class="font-semibold text-emerald-700">${money(o.tutar)}</span>
+        <span class="text-xs text-slate-500 ml-2">${o.tarih || ''}</span>
+        ${o.aciklama ? `<span class="text-xs text-slate-400 ml-2">· ${o.aciklama}</span>` : ''}
+      </div>
+      <button class="px-2 py-1 text-xs rounded border text-rose-600 hover:bg-rose-50" data-del-odeme="${o.odeme_id}">Sil</button>
+    `;
+    el.querySelector('[data-del-odeme]').addEventListener('click', async () => {
+      await fetchJSON(`/api/odemeler/${o.odeme_id}`, { method: 'DELETE' });
+      kisiCache = await fetchJSON('/api/kisiler');
+      activeOdemeKisi = kisiCache.find(k => k.kisi_id === activeOdemeKisiId) || activeOdemeKisi;
+      await loadOdemeler();
+      await loadKisiler();
+      await loadDashboard();
+    });
+    list.appendChild(el);
+  });
+}
+
+async function addOdeme() {
+  if (!activeOdemeKisiId) return;
+  const tutar = Number(qs('#odeme-tutar').value || 0);
+  if (tutar <= 0) return;
+
+  const payload = {
+    tutar,
+    tarih: qs('#odeme-tarih').value || null,
+    aciklama: qs('#odeme-aciklama').value || null,
+  };
+
+  await fetchJSON(`/api/kisiler/${activeOdemeKisiId}/odemeler`, { method: 'POST', body: JSON.stringify(payload) });
+
+  qs('#odeme-tutar').value = '';
+  qs('#odeme-aciklama').value = '';
+
+  kisiCache = await fetchJSON('/api/kisiler');
+  activeOdemeKisi = kisiCache.find(k => k.kisi_id === activeOdemeKisiId) || activeOdemeKisi;
+  await loadOdemeler();
+  await loadKisiler();
+  await loadDashboard();
 }
 
 // ------------------------

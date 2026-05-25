@@ -33,12 +33,11 @@ def create_app() -> Flask:
             rows = conn.execute(
                 """
                 SELECT
-                    k.*, 
+                    k.*,
                     COALESCE(COUNT(ha.atama_id), 0) as hisse_sayisi,
-                    COALESCE(SUM(COALESCE(h.toplam_fiyat, 0) / COALESCE(NULLIF(h.hisse_adedi, 0), 1)), 0) as toplam_hisse_bedeli
+                    COALESCE((SELECT SUM(o.tutar) FROM odemeler o WHERE o.kisi_id = k.kisi_id), 0) as odemeler_toplam
                 FROM kisiler k
                 LEFT JOIN hisse_atamalari ha ON ha.kisi_id = k.kisi_id
-                LEFT JOIN hayvanlar h ON h.hayvan_id = ha.hayvan_id
                 GROUP BY k.kisi_id
                 ORDER BY k.kisi_id DESC
                 """
@@ -47,11 +46,12 @@ def create_app() -> Flask:
         result = []
         for r in rows:
             d = row_to_dict(r)
-            hisse_sayisi = int(d.get("hisse_sayisi") or 0)
-            toplam_hisse_bedeli = float(d.get("toplam_hisse_bedeli") or 0)
             pesinat = float(d.get("pesinat") or 0)
-            toplam_odenen = float(d.get("toplam_odenen") or 0)
-            d["kalan_borc"] = round(toplam_hisse_bedeli - (pesinat + toplam_odenen), 2) if hisse_sayisi > 0 else None
+            odemeler_toplam = float(d.get("odemeler_toplam") or 0)
+            kategori_fiyat = float(d.get("kategori_fiyat") or 0)
+            d["toplam_odenen"] = odemeler_toplam
+            d["toplam_odenen_genel"] = pesinat + odemeler_toplam
+            d["kalan_borc"] = round(kategori_fiyat - (pesinat + odemeler_toplam), 2) if kategori_fiyat > 0 else None
             result.append(d)
 
         return jsonify(result)
@@ -190,6 +190,53 @@ def create_app() -> Flask:
             if not existing:
                 return jsonify({"error": "Kişi bulunamadı"}), 404
             conn.execute("DELETE FROM kisiler WHERE kisi_id = ?", (kisi_id,))
+        return jsonify({"ok": True})
+
+    # -----------------
+    # ODEMELER
+    # -----------------
+    @app.get("/api/kisiler/<int:kisi_id>/odemeler")
+    def api_odemeler_list(kisi_id: int):
+        with get_connection() as conn:
+            rows = conn.execute(
+                "SELECT * FROM odemeler WHERE kisi_id = ? ORDER BY odeme_id DESC",
+                (kisi_id,),
+            ).fetchall()
+        return jsonify([row_to_dict(r) for r in rows])
+
+    @app.post("/api/kisiler/<int:kisi_id>/odemeler")
+    def api_odeme_create(kisi_id: int):
+        data = request.get_json(force=True) or {}
+        tutar = data.get("tutar")
+        if tutar is None or tutar == "":
+            return jsonify({"error": "tutar zorunlu"}), 400
+        tutar = float(tutar)
+        if tutar <= 0:
+            return jsonify({"error": "tutar 0'dan büyük olmalı"}), 400
+
+        tarih = (data.get("tarih") or "").strip() or datetime.now().strftime("%Y-%m-%d")
+        aciklama = (data.get("aciklama") or "").strip() or None
+
+        with get_connection() as conn:
+            existing = conn.execute("SELECT * FROM kisiler WHERE kisi_id = ?", (kisi_id,)).fetchone()
+            if not existing:
+                return jsonify({"error": "Kişi bulunamadı"}), 404
+
+            cur = conn.execute(
+                "INSERT INTO odemeler (kisi_id, tutar, tarih, aciklama) VALUES (?, ?, ?, ?)",
+                (kisi_id, tutar, tarih, aciklama),
+            )
+            row = conn.execute("SELECT * FROM odemeler WHERE odeme_id = ?", (cur.lastrowid,)).fetchone()
+
+        return jsonify(row_to_dict(row)), 201
+
+    @app.delete("/api/odemeler/<int:odeme_id>")
+    def api_odeme_delete(odeme_id: int):
+        with get_connection() as conn:
+            existing = conn.execute("SELECT * FROM odemeler WHERE odeme_id = ?", (odeme_id,)).fetchone()
+            if not existing:
+                return jsonify({"error": "Ödeme bulunamadı"}), 404
+            conn.execute("DELETE FROM odemeler WHERE odeme_id = ?", (odeme_id,))
         return jsonify({"ok": True})
 
     # -----------------

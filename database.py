@@ -84,6 +84,19 @@ def init_db():
             """
         )
 
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS odemeler (
+                odeme_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kisi_id INTEGER NOT NULL,
+                tutar REAL NOT NULL DEFAULT 0,
+                tarih TEXT,
+                aciklama TEXT,
+                FOREIGN KEY (kisi_id) REFERENCES kisiler(kisi_id) ON DELETE CASCADE
+            )
+            """
+        )
+
 
 def kategori_fiyat_bul(cinsiyet, agirlik_kg):
     """Verilen cinsiyet ve agirlik kategorisine gore fiyati dondur."""
