@@ -57,6 +57,7 @@ def create_app() -> Flask:
             return jsonify({"error": "ad_soyad zorunlu"}), 400
 
         telefon = (data.get("telefon") or "").strip() or None
+        kategori = (data.get("kategori") or "").strip() or None
         pesinat = float(data.get("pesinat") or 0)
         toplam_odenen = float(data.get("toplam_odenen") or 0)
         vekalet_durumu = int(data.get("vekalet_durumu") or 0)
@@ -64,10 +65,10 @@ def create_app() -> Flask:
         with get_connection() as conn:
             cur = conn.execute(
                 """
-                INSERT INTO kisiler (ad_soyad, telefon, pesinat, toplam_odenen, vekalet_durumu)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO kisiler (ad_soyad, telefon, kategori, pesinat, toplam_odenen, vekalet_durumu)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (ad_soyad, telefon, pesinat, toplam_odenen, vekalet_durumu),
+                (ad_soyad, telefon, kategori, pesinat, toplam_odenen, vekalet_durumu),
             )
             kisi_id = cur.lastrowid
             row = conn.execute("SELECT * FROM kisiler WHERE kisi_id = ?", (kisi_id,)).fetchone()
@@ -121,6 +122,7 @@ def create_app() -> Flask:
         fields = {
             "ad_soyad": data.get("ad_soyad"),
             "telefon": data.get("telefon"),
+            "kategori": data.get("kategori"),
             "pesinat": data.get("pesinat"),
             "toplam_odenen": data.get("toplam_odenen"),
             "vekalet_durumu": data.get("vekalet_durumu"),
@@ -137,6 +139,8 @@ def create_app() -> Flask:
 
             telefon_raw = fields["telefon"] if fields["telefon"] is not None else existing["telefon"]
             telefon = (telefon_raw or "").strip() or None
+            kategori_raw = fields["kategori"] if fields["kategori"] is not None else existing["kategori"]
+            kategori = (kategori_raw or "").strip() or None
 
             pesinat = float(fields["pesinat"] if fields["pesinat"] is not None else existing["pesinat"] or 0)
             toplam_odenen = float(
@@ -149,10 +153,31 @@ def create_app() -> Flask:
             conn.execute(
                 """
                 UPDATE kisiler
-                SET ad_soyad = ?, telefon = ?, pesinat = ?, toplam_odenen = ?, vekalet_durumu = ?
+                SET ad_soyad = ?, telefon = ?, kategori = ?, pesinat = ?, toplam_odenen = ?, vekalet_durumu = ?
                 WHERE kisi_id = ?
                 """,
-                (ad_soyad, telefon, pesinat, toplam_odenen, vekalet_durumu, kisi_id),
+                (ad_soyad, telefon, kategori, pesinat, toplam_odenen, vekalet_durumu, kisi_id),
+            )
+            row = conn.execute("SELECT * FROM kisiler WHERE kisi_id = ?", (kisi_id,)).fetchone()
+
+        return jsonify(row_to_dict(row))
+
+    @app.post("/api/kisiler/<int:kisi_id>/odeme")
+    def api_kisi_odeme_ekle(kisi_id: int):
+        data = request.get_json(force=True) or {}
+        tutar = float(data.get("tutar") or 0)
+        if tutar <= 0:
+            return jsonify({"error": "Ödeme tutarı 0'dan büyük olmalı"}), 400
+
+        with get_connection() as conn:
+            existing = conn.execute("SELECT * FROM kisiler WHERE kisi_id = ?", (kisi_id,)).fetchone()
+            if not existing:
+                return jsonify({"error": "Kişi bulunamadı"}), 404
+
+            toplam_odenen = float(existing["toplam_odenen"] or 0) + tutar
+            conn.execute(
+                "UPDATE kisiler SET toplam_odenen = ? WHERE kisi_id = ?",
+                (toplam_odenen, kisi_id),
             )
             row = conn.execute("SELECT * FROM kisiler WHERE kisi_id = ?", (kisi_id,)).fetchone()
 

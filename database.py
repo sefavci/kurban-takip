@@ -19,12 +19,18 @@ def init_db():
                 kisi_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ad_soyad TEXT NOT NULL,
                 telefon TEXT,
+                kategori TEXT,
                 pesinat REAL DEFAULT 0,
                 toplam_odenen REAL DEFAULT 0,
                 vekalet_durumu INTEGER DEFAULT 0
             )
             """
         )
+
+        cols = conn.execute("PRAGMA table_info(kisiler)").fetchall()
+        col_names = {c["name"] for c in cols}
+        if "kategori" not in col_names:
+            conn.execute("ALTER TABLE kisiler ADD COLUMN kategori TEXT")
 
         conn.execute(
             """

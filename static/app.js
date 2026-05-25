@@ -2,6 +2,7 @@ let currentSection = 'dashboard';
 let editingKisiId = null;
 let activeHayvanIdForHissedar = null;
 let editingHayvanId = null;
+let odemeKisiId = null;
 let kisilerSearchTerm = '';
 let dashboardHissedarIds = null;
 
@@ -60,6 +61,7 @@ function bindModals() {
       closeModal('#modal-kisi');
       closeModal('#modal-hayvan');
       closeModal('#modal-hissedar');
+      closeModal('#modal-odeme');
     });
   });
 
@@ -69,6 +71,7 @@ function bindModals() {
     qs('#btn-kisi-sil').classList.add('hidden');
     qs('#kisi-ad').value = '';
     qs('#kisi-telefon').value = '';
+    qs('#kisi-kategori').value = '';
     qs('#kisi-pesinat').value = 0;
     qs('#kisi-toplam').value = 0;
     qs('#kisi-vekalet').value = '0';
@@ -88,6 +91,7 @@ function bindModals() {
 
   qs('#btn-kisi-kaydet').addEventListener('click', saveKisi);
   qs('#btn-kisi-sil').addEventListener('click', deleteKisi);
+  qs('#btn-odeme-kaydet').addEventListener('click', saveOdeme);
   qs('#btn-hayvan-kaydet').addEventListener('click', saveHayvan);
 
   qs('#hissedar-ara').addEventListener('input', () => {
@@ -183,7 +187,8 @@ async function loadKisiler() {
     : kisiler.filter(k => {
         const ad = normTR(k.ad_soyad);
         const tel = normTR(k.telefon);
-        return ad.includes(t) || tel.includes(t);
+        const kategori = normTR(k.kategori);
+        return ad.includes(t) || tel.includes(t) || kategori.includes(t);
       });
 
   filtered.forEach(k => {
@@ -203,16 +208,21 @@ async function loadKisiler() {
     tr.innerHTML = `
       <td class="px-4 py-3 font-medium">${k.ad_soyad}</td>
       <td class="px-4 py-3">${k.telefon || ''}</td>
+      <td class="px-4 py-3">${k.kategori || ''}</td>
       <td class="px-4 py-3 text-right">${money(k.pesinat)}</td>
       <td class="px-4 py-3 text-right">${money(toplamOdenenGenel)}</td>
       <td class="px-4 py-3 text-right">${borcText}</td>
       <td class="px-4 py-3">${badge}</td>
       <td class="px-4 py-3 text-right">
-        <button class="px-3 py-1 rounded border hover:bg-slate-50" data-edit="${k.kisi_id}">Düzenle</button>
+        <div class="inline-flex gap-2">
+          <button class="px-3 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700" data-odeme="${k.kisi_id}">Ödeme</button>
+          <button class="px-3 py-1 rounded border hover:bg-slate-50" data-edit="${k.kisi_id}">Düzenle</button>
+        </div>
       </td>
     `;
 
     tr.querySelector('[data-edit]').addEventListener('click', () => openEditKisi(k));
+    tr.querySelector('[data-odeme]').addEventListener('click', () => openOdemeModal(k));
     tbody.appendChild(tr);
   });
 }
@@ -223,6 +233,7 @@ function openEditKisi(k) {
   qs('#btn-kisi-sil').classList.remove('hidden');
   qs('#kisi-ad').value = k.ad_soyad || '';
   qs('#kisi-telefon').value = k.telefon || '';
+  qs('#kisi-kategori').value = k.kategori || '';
   qs('#kisi-pesinat').value = Number(k.pesinat || 0);
   qs('#kisi-toplam').value = Number(k.toplam_odenen || 0);
   qs('#kisi-vekalet').value = String(Number(k.vekalet_durumu || 0));
@@ -233,6 +244,7 @@ async function saveKisi() {
   const payload = {
     ad_soyad: qs('#kisi-ad').value,
     telefon: qs('#kisi-telefon').value,
+    kategori: qs('#kisi-kategori').value,
     pesinat: Number(qs('#kisi-pesinat').value || 0),
     toplam_odenen: Number(qs('#kisi-toplam').value || 0),
     vekalet_durumu: Number(qs('#kisi-vekalet').value || 0),
@@ -259,6 +271,24 @@ async function deleteKisi() {
   await loadKisiler();
   await loadDashboard();
   await loadHayvanlar();
+}
+
+function openOdemeModal(k) {
+  odemeKisiId = k.kisi_id;
+  qs('#odeme-modal-title').textContent = `Ödeme Ekle - ${k.ad_soyad}`;
+  qs('#odeme-tutar').value = '';
+  openModal('#modal-odeme');
+}
+
+async function saveOdeme() {
+  if (!odemeKisiId) return;
+  const tutar = Number(qs('#odeme-tutar').value || 0);
+  await fetchJSON(`/api/kisiler/${odemeKisiId}/odeme`, { method: 'POST', body: JSON.stringify({ tutar }) });
+  closeModal('#modal-odeme');
+  odemeKisiId = null;
+  kisiCache = await fetchJSON('/api/kisiler');
+  await loadKisiler();
+  await loadDashboard();
 }
 
 // ------------------------
