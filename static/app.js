@@ -140,8 +140,6 @@ function bindModals() {
     qs('#hayvan-modal-title').textContent = 'Yeni Hayvan';
     qs('#hayvan-kupe').value = '';
     qs('#hayvan-grup').value = 'Küçükbaş';
-    qs('#hayvan-fiyat').value = '';
-    qs('#hayvan-kilo').value = '';
     qs('#hayvan-hisse').value = 7;
     openModal('#modal-hayvan');
   });
@@ -366,9 +364,6 @@ async function loadHayvanlar() {
       </td>
       <td class="px-4 py-3 font-medium">${h.kupe_no}</td>
       <td class="px-4 py-3">${h.grup || ''}</td>
-      <td class="px-4 py-3 text-right">${h.kilo == null ? '' : `${Number(h.kilo).toLocaleString('tr-TR', { maximumFractionDigits: 2 })} kg`}</td>
-      <td class="px-4 py-3 text-right">${h.kisi_basi_et == null ? '' : `${Number(h.kisi_basi_et).toLocaleString('tr-TR', { maximumFractionDigits: 2 })} kg`}</td>
-      <td class="px-4 py-3 text-right">${h.toplam_fiyat == null ? '' : money(h.toplam_fiyat)}</td>
       <td class="px-4 py-3 text-right">${h.hisse_adedi}</td>
       <td class="px-4 py-3 text-right">${h.dolu_hisse}/${h.bos_hisse}</td>
       <td class="px-4 py-3 text-right">
@@ -418,8 +413,6 @@ function openEditHayvan(h) {
   qs('#hayvan-modal-title').textContent = 'Hayvan Düzenle';
   qs('#hayvan-kupe').value = h.kupe_no || '';
   qs('#hayvan-grup').value = h.grup || 'Küçükbaş';
-  qs('#hayvan-fiyat').value = (h.toplam_fiyat == null ? '' : Number(h.toplam_fiyat));
-  qs('#hayvan-kilo').value = (h.kilo == null ? '' : Number(h.kilo));
   qs('#hayvan-hisse').value = Number(h.hisse_adedi || 7);
   openModal('#modal-hayvan');
 }
@@ -428,8 +421,6 @@ async function saveHayvan() {
   const payload = {
     kupe_no: qs('#hayvan-kupe').value,
     grup: qs('#hayvan-grup').value,
-    toplam_fiyat: qs('#hayvan-fiyat').value === '' ? null : Number(qs('#hayvan-fiyat').value),
-    kilo: qs('#hayvan-kilo').value === '' ? null : Number(qs('#hayvan-kilo').value),
     hisse_adedi: Number(qs('#hayvan-hisse').value || 7),
   };
 
