@@ -3,19 +3,6 @@ from pathlib import Path
 
 DB_PATH = Path(__file__).resolve().parent / "kurban_takip.db"
 
-KATEGORILER = {
-    "erkek": [
-        {"agirlik": 33, "fiyat": 29000},
-        {"agirlik": 40, "fiyat": 34000},
-        {"agirlik": 45, "fiyat": 38000},
-        {"agirlik": 50, "fiyat": 42000},
-        {"agirlik": 60, "fiyat": 50000},
-    ],
-    "disi": [
-        {"agirlik": 36, "fiyat": 30000},
-    ],
-}
-
 
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
@@ -97,14 +84,6 @@ def init_db():
             """
         )
 
-
-def kategori_fiyat_bul(cinsiyet, agirlik_kg):
-    """Verilen cinsiyet ve agirlik kategorisine gore fiyati dondur."""
-    kategoriler = KATEGORILER.get(cinsiyet, [])
-    for kat in kategoriler:
-        if kat["agirlik"] == agirlik_kg:
-            return kat["fiyat"]
-    return None
 
 
 def row_to_dict(row):

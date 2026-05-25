@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from flask import Flask, jsonify, render_template, request
 
-from database import KATEGORILER, get_connection, init_db, kategori_fiyat_bul, row_to_dict
+from database import get_connection, init_db, row_to_dict
 
 
 def create_app() -> Flask:
@@ -16,13 +16,6 @@ def create_app() -> Flask:
     @app.get("/")
     def index():
         return render_template("index.html")
-
-    # -----------------
-    # KATEGORILER API
-    # -----------------
-    @app.get("/api/kategoriler")
-    def api_kategoriler():
-        return jsonify(KATEGORILER)
 
     # -----------------
     # KISILER
@@ -69,14 +62,10 @@ def create_app() -> Flask:
         vekalet_durumu = int(data.get("vekalet_durumu") or 0)
 
         kategori_cinsiyet = (data.get("kategori_cinsiyet") or "").strip() or None
-        kategori_kg = data.get("kategori_kg")
-        kategori_kg = int(kategori_kg) if kategori_kg not in (None, "", 0) else None
-
-        kategori_fiyat = 0
-        if kategori_cinsiyet and kategori_kg:
-            fiyat = kategori_fiyat_bul(kategori_cinsiyet, kategori_kg)
-            if fiyat is not None:
-                kategori_fiyat = fiyat
+        kategori_kg_raw = data.get("kategori_kg")
+        kategori_kg = int(kategori_kg_raw) if kategori_kg_raw not in (None, "", 0) else None
+        kategori_fiyat_raw = data.get("kategori_fiyat")
+        kategori_fiyat = float(kategori_fiyat_raw) if kategori_fiyat_raw not in (None, "", 0) else 0
 
         with get_connection() as conn:
             cur = conn.execute(
@@ -163,11 +152,8 @@ def create_app() -> Flask:
             kategori_kg_raw = data.get("kategori_kg") if data.get("kategori_kg") is not None else existing["kategori_kg"]
             kategori_kg = int(kategori_kg_raw) if kategori_kg_raw not in (None, "", 0) else None
 
-            kategori_fiyat = float(existing["kategori_fiyat"] or 0)
-            if kategori_cinsiyet and kategori_kg:
-                fiyat = kategori_fiyat_bul(kategori_cinsiyet, kategori_kg)
-                if fiyat is not None:
-                    kategori_fiyat = fiyat
+            kategori_fiyat_raw = data.get("kategori_fiyat") if data.get("kategori_fiyat") is not None else existing["kategori_fiyat"]
+            kategori_fiyat = float(kategori_fiyat_raw) if kategori_fiyat_raw not in (None, "", 0) else 0
 
             conn.execute(
                 """

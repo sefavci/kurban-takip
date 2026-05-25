@@ -4,8 +4,6 @@ let activeHayvanIdForHissedar = null;
 let editingHayvanId = null;
 let kisilerSearchTerm = '';
 let dashboardHissedarIds = null;
-let kategoriData = null;
-
 function qs(sel) { return document.querySelector(sel); }
 function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
 
@@ -61,46 +59,6 @@ function kategoriLabel(cinsiyet, kg) {
   return `${cinsiyetText} ${kg} kg`;
 }
 
-function updateKategoriKgOptions(cinsiyet) {
-  const kgSelect = qs('#kisi-kategori-kg');
-  kgSelect.innerHTML = '';
-
-  if (!cinsiyet || !kategoriData || !kategoriData[cinsiyet]) {
-    kgSelect.innerHTML = '<option value="">Önce cinsiyet seçin</option>';
-    qs('#kisi-kategori-fiyat-box').classList.add('hidden');
-    return;
-  }
-
-  kgSelect.innerHTML = '<option value="">Kategori seçin</option>';
-  kategoriData[cinsiyet].forEach(kat => {
-    const opt = document.createElement('option');
-    opt.value = kat.agirlik;
-    opt.textContent = `${kat.agirlik} kg - ${money(kat.fiyat)}`;
-    kgSelect.appendChild(opt);
-  });
-}
-
-function updateKategoriFiyatDisplay() {
-  const cinsiyet = qs('#kisi-kategori-cinsiyet').value;
-  const kg = Number(qs('#kisi-kategori-kg').value);
-  const box = qs('#kisi-kategori-fiyat-box');
-
-  if (!cinsiyet || !kg || !kategoriData || !kategoriData[cinsiyet]) {
-    box.classList.add('hidden');
-    return;
-  }
-
-  const kat = kategoriData[cinsiyet].find(k => k.agirlik === kg);
-  if (!kat) {
-    box.classList.add('hidden');
-    return;
-  }
-
-  qs('#kisi-kategori-ozet').textContent = kategoriLabel(cinsiyet, kg);
-  qs('#kisi-kategori-fiyat-goster').textContent = money(kat.fiyat);
-  box.classList.remove('hidden');
-}
-
 function bindModals() {
   qsa('.modal-close').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -118,21 +76,11 @@ function bindModals() {
     qs('#kisi-ad').value = '';
     qs('#kisi-telefon').value = '';
     qs('#kisi-kategori-cinsiyet').value = '';
-    updateKategoriKgOptions('');
-    qs('#kisi-kategori-fiyat-box').classList.add('hidden');
+    qs('#kisi-kategori-kg').value = '';
+    qs('#kisi-kategori-fiyat').value = '';
     qs('#kisi-pesinat').value = 0;
     qs('#kisi-vekalet').value = '0';
     openModal('#modal-kisi');
-  });
-
-  qs('#kisi-kategori-cinsiyet').addEventListener('change', () => {
-    const cinsiyet = qs('#kisi-kategori-cinsiyet').value;
-    updateKategoriKgOptions(cinsiyet);
-    updateKategoriFiyatDisplay();
-  });
-
-  qs('#kisi-kategori-kg').addEventListener('change', () => {
-    updateKategoriFiyatDisplay();
   });
 
   qs('#btn-hayvan-modal').addEventListener('click', () => {
@@ -299,14 +247,9 @@ function openEditKisi(k) {
   qs('#kisi-pesinat').value = Number(k.pesinat || 0);
   qs('#kisi-vekalet').value = String(Number(k.vekalet_durumu || 0));
 
-  const cinsiyet = k.kategori_cinsiyet || '';
-  qs('#kisi-kategori-cinsiyet').value = cinsiyet;
-  updateKategoriKgOptions(cinsiyet);
-
-  if (k.kategori_kg) {
-    qs('#kisi-kategori-kg').value = String(k.kategori_kg);
-  }
-  updateKategoriFiyatDisplay();
+  qs('#kisi-kategori-cinsiyet').value = k.kategori_cinsiyet || '';
+  qs('#kisi-kategori-kg').value = k.kategori_kg || '';
+  qs('#kisi-kategori-fiyat').value = Number(k.kategori_fiyat || 0) || '';
 
   openModal('#modal-kisi');
 }
@@ -320,6 +263,7 @@ async function saveKisi() {
     vekalet_durumu: Number(qs('#kisi-vekalet').value || 0),
     kategori_cinsiyet: qs('#kisi-kategori-cinsiyet').value || null,
     kategori_kg: qs('#kisi-kategori-kg').value ? Number(qs('#kisi-kategori-kg').value) : null,
+    kategori_fiyat: qs('#kisi-kategori-fiyat').value ? Number(qs('#kisi-kategori-fiyat').value) : null,
   };
 
   if (editingKisiId) {
@@ -720,7 +664,6 @@ function initNav() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  kategoriData = await fetchJSON('/api/kategoriler');
   initNav();
   bindModals();
   showSection('dashboard');
