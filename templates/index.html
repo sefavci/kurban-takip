@@ -8,7 +8,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900">
   <div class="min-h-screen flex">
-    <aside class="w-64 bg-white border-r border-slate-200 p-4">
+    <aside class="w-64 shrink-0 bg-white border-r border-slate-200 p-4">
       <div class="text-xl font-bold mb-6">Kurban Takip</div>
       <nav class="space-y-2">
         <button class="nav-btn w-full text-left px-3 py-2 rounded hover:bg-slate-100" data-target="dashboard">Dashboard</button>
@@ -19,7 +19,7 @@
       <div class="mt-8 text-xs text-slate-500">Created by Sefa AVCI</div>
     </aside>
 
-    <main class="flex-1 p-6">
+    <main class="flex-1 min-w-0 p-6 overflow-x-hidden">
       <section id="section-dashboard" class="space-y-6">
         <h1 class="text-2xl font-bold">Dashboard</h1>
 
@@ -59,14 +59,12 @@
 
         <div class="bg-white border border-slate-200 rounded-lg p-4">
           <div id="dash-kisi-list-title" class="font-semibold">Kişiler</div>
-          <div class="mt-3 overflow-auto">
+          <div class="mt-3 max-h-96 overflow-auto">
             <table class="min-w-full text-sm">
               <thead class="bg-slate-100 text-slate-600">
                 <tr>
                   <th class="text-left px-3 py-2">Ad Soyad</th>
                   <th class="text-left px-3 py-2">Telefon</th>
-                  <th class="text-right px-3 py-2">Toplam Ödenen</th>
-                  <th class="text-right px-3 py-2">Kalan Borç</th>
                 </tr>
               </thead>
               <tbody id="dash-kisi-list" class="divide-y divide-slate-200"></tbody>
@@ -86,7 +84,7 @@
           <input id="kisiler-ara" placeholder="İsim veya telefon yaz..." class="mt-1 w-full border rounded px-3 py-2" />
         </div>
 
-        <div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+        <div class="bg-white border border-slate-200 rounded-lg overflow-x-auto">
           <table class="min-w-full text-sm">
             <thead class="bg-slate-100 text-slate-600">
               <tr>
@@ -110,7 +108,7 @@
           <button id="btn-hayvan-modal" class="px-4 py-2 rounded bg-slate-900 text-white hover:bg-slate-800">Yeni Hayvan</button>
         </div>
 
-        <div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+        <div class="bg-white border border-slate-200 rounded-lg overflow-x-auto">
           <table class="min-w-full text-sm">
             <thead class="bg-slate-100 text-slate-600">
               <tr>
@@ -141,7 +139,7 @@
 
           <div class="mt-6">
             <div class="text-sm text-slate-500 mb-2">Hissedarlar</div>
-            <div id="kesim-hissedarlar" class="space-y-2"></div>
+            <div id="kesim-hissedarlar" class="space-y-2 max-h-[45vh] overflow-auto pr-1"></div>
           </div>
 
           <div id="kesim-uyari" class="mt-6 text-lg font-semibold"></div>

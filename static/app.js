@@ -151,7 +151,7 @@ async function renderDashboardKisiList(key, title) {
 
   const ids = dashboardHissedarIds?.[key] || [];
   if (!ids.length) {
-    tbody.innerHTML = '<tr><td class="px-3 py-2 text-slate-500" colspan="4">Kayıt yok</td></tr>';
+    tbody.innerHTML = '<tr><td class="px-3 py-2 text-slate-500" colspan="2">Kayıt yok</td></tr>';
     return;
   }
 
@@ -160,15 +160,10 @@ async function renderDashboardKisiList(key, title) {
   const list = kisiler.filter(k => idSet.has(Number(k.kisi_id)));
 
   list.forEach(k => {
-    const toplamOdenenGenel = Number(k.pesinat || 0) + Number(k.toplam_odenen || 0);
-    const kalan = k.kalan_borc;
-
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="px-3 py-2 font-medium">${k.ad_soyad}</td>
       <td class="px-3 py-2">${k.telefon || ''}</td>
-      <td class="px-3 py-2 text-right">${money(toplamOdenenGenel)}</td>
-      <td class="px-3 py-2 text-right">${k.hisse_sayisi > 0 ? money(kalan) : '<span class="text-slate-500">-</span>'}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -402,15 +397,12 @@ function renderHissedarList() {
       ? '<span class="inline-flex px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700">Vekalet Alındı</span>'
       : '<span class="inline-flex px-2 py-1 text-xs rounded bg-rose-100 text-rose-700">Vekalet Eksik</span>';
 
-    const toplamOdenenGenel = Number(h.pesinat || 0) + Number(h.toplam_odenen || 0);
-
     const el = document.createElement('div');
     el.className = 'border rounded p-3 flex items-start justify-between gap-3';
     el.innerHTML = `
       <div>
         <div class="font-semibold">${h.ad_soyad}</div>
-        <div class="text-sm text-slate-600">Toplam ödenen: <span class="font-semibold">${money(toplamOdenenGenel)}</span></div>
-        <div class="text-sm text-slate-600">Kalan borç: <span class="font-semibold">${money(h.kalan_borc)}</span></div>
+        <div class="text-sm text-slate-600">${h.telefon || ''}</div>
         <div class="mt-1">${badge}</div>
       </div>
       <button class="px-3 py-1 rounded border hover:bg-slate-50" data-del="${h.atama_id}">Sil</button>
@@ -504,8 +496,6 @@ async function loadKesimPaneli() {
     const vekText = vek === 1 ? 'Vekalet Alındı' : 'Vekalet Eksik';
     const vekClass = vek === 1 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700';
 
-    const toplamOdenenGenel = Number(h.pesinat || 0) + Number(h.toplam_odenen || 0);
-
     const el = document.createElement('div');
     el.className = 'border rounded-lg p-4 bg-white';
     el.innerHTML = `
@@ -515,21 +505,6 @@ async function loadKesimPaneli() {
           <div class="text-sm text-slate-600">Telefon: <span class="font-semibold">${h.telefon || '-'}</span></div>
         </div>
         <span class="inline-flex px-2 py-1 text-xs rounded ${vekClass}">${vekText}</span>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 text-sm">
-        <div class="bg-slate-50 border rounded p-2">
-          <div class="text-slate-500">Peşinat</div>
-          <div class="font-semibold">${money(h.pesinat)}</div>
-        </div>
-        <div class="bg-slate-50 border rounded p-2">
-          <div class="text-slate-500">Toplam Ödenen</div>
-          <div class="font-semibold">${money(toplamOdenenGenel)}</div>
-        </div>
-        <div class="bg-slate-50 border rounded p-2">
-          <div class="text-slate-500">Kalan Borç</div>
-          <div class="font-semibold">${money(h.kalan_borc)}</div>
-        </div>
       </div>
     `;
     list.appendChild(el);

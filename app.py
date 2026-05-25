@@ -310,35 +310,18 @@ def create_app() -> Flask:
 
             rows = conn.execute(
                 """
-                SELECT
-                    ha.atama_id,
-                    k.*,
-                    COALESCE(COUNT(ha_all.atama_id), 0) as hisse_sayisi,
-                    COALESCE(SUM(COALESCE(h_all.toplam_fiyat, 0) / COALESCE(NULLIF(h_all.hisse_adedi, 0), 1)), 0) as toplam_hisse_bedeli
+                SELECT ha.atama_id, k.*
                 FROM hisse_atamalari ha
                 JOIN kisiler k ON k.kisi_id = ha.kisi_id
-                LEFT JOIN hisse_atamalari ha_all ON ha_all.kisi_id = k.kisi_id
-                LEFT JOIN hayvanlar h_all ON h_all.hayvan_id = ha_all.hayvan_id
                 WHERE ha.hayvan_id = ?
-                GROUP BY ha.atama_id, k.kisi_id
                 ORDER BY ha.atama_id ASC
                 """,
                 (hayvan_id,),
             ).fetchall()
 
-        result = []
-        for r in rows:
-            hisse_sayisi = int(r["hisse_sayisi"] or 0)
-            toplam_hisse_bedeli = float(r["toplam_hisse_bedeli"] or 0)
-            pesinat = float(r["pesinat"] or 0)
-            toplam_odenen = float(r["toplam_odenen"] or 0)
-            d = row_to_dict(r)
-            d["kalan_borc"] = round(toplam_hisse_bedeli - (pesinat + toplam_odenen), 2) if hisse_sayisi > 0 else None
-            result.append(d)
-
         return jsonify({
             "hayvan": row_to_dict(hayvan),
-            "hissedarlar": result,
+            "hissedarlar": [row_to_dict(r) for r in rows],
         })
 
     @app.post("/api/atama")
